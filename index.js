@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import connectDB from './config/connectDB.js';
-// import authRoutes from './routes/auth.router.js';
+import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 // Connect to MongoDB
 connectDB();
 
-// app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 
 
