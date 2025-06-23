@@ -7,6 +7,15 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
   },
+  name: {
+    type: String,
+  },
+  email: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
   registeredAt: {
     type: Date,
     default: Date.now,
