@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  documents: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Document"
+    }
+  ]
 });
 
 const User = mongoose.model("User", userSchema);

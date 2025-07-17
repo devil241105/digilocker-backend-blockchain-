@@ -79,7 +79,7 @@ export const getUserProfile = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ address: decoded.address.toLowerCase() });
+    const user = await User.findOne({ address: decoded.address.toLowerCase() }).populate("documents");
 
     if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
@@ -144,7 +144,7 @@ export const deleteUserProfile = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({});
+    const users = await User.find({}).populate("documents");
     res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
