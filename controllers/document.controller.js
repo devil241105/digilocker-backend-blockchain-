@@ -1,6 +1,9 @@
+import { cloudinary } from "../config/cloudinary.js";
+import { uploadToIPFS } from "../utils/ipfsUploader.js";
 import Document from "../models/document.model.js";
 import User from "../models/user.model.js";
-import { uploadToIPFS } from "../utils/ipfsUploader.js";
+import { PassThrough } from "stream";
+import mongoose from "mongoose";
 
 export const uploadDocument = async (req, res) => {
   try {
@@ -11,13 +14,24 @@ export const uploadDocument = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const cloudinaryUrl = file.path || file.secure_url;
-    const ipfsHash = await uploadToIPFS(file.path);
+    const cloudinaryUrl = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        }
+      );
 
-  
+      const bufferStream = new PassThrough();
+      bufferStream.end(file.buffer);
+      bufferStream.pipe(stream);
+    });
+
+    const ipfsHash = await uploadToIPFS(file.buffer, file.originalname);
+
     const user = await User.findOne({ address: address.toLowerCase() });
     if (!user) return res.status(404).json({ error: "User not found" });
-
 
     const doc = await Document.create({
       owner: user._id,
@@ -30,20 +44,27 @@ export const uploadDocument = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "File uploaded and linked to user",
+      message: "File uploaded to Cloudinary and IPFS",
       doc
     });
 
   } catch (err) {
     console.error("Upload error:", err);
-    return res.status(500).json({ error: "Document upload failed" });
+    if (!res.headersSent) {
+      return res.status(500).json({ error: "Document upload failed" });
+    }
   }
 };
 
+
 export const getUserDocuments = async (req, res) => {
   try {
-    const address = req.user.address;
-    const documents = await Document.find({ owner: address.toLowerCase() })
+    const address = req.user.address.toLowerCase();
+
+    const user = await User.findOne({ address });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const documents = await Document.find({ owner: user._id })
       .populate("owner", "address name email phone")
       .sort({ uploadedAt: -1 });
 
@@ -87,4 +108,9 @@ export const deleteDocument = async (req, res) => {
     console.error("Delete document error:", err);
     return res.status(500).json({ error: "Failed to delete document" });
   }
+};
+
+export const testUpload = (req, res) => {
+  console.log("🧾 Reached testUpload controller ✅");
+  res.json({ success: true, msg: "Upload flow working", file: req.file });
 };

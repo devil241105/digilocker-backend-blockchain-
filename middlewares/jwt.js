@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken';
-import userModel from '../models/Auth.js'
 
-import jwt from 'jsonwebtoken';
 
 export const jwtAuthMiddleware = (req, res, next) => {
     let token = null;

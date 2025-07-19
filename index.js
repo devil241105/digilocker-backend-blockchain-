@@ -28,4 +28,5 @@ app.use('/api/documents', documentRoutes);
 
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
+  console.log(`MongoDB URI: ${process.env.MONGODB_URI}`);
 });
