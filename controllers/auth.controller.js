@@ -20,7 +20,6 @@ export const registerWithMetaMask = async (req, res) => {
     const token = jwt.sign({ address }, process.env.JWT_SECRET, { expiresIn: "2h" });
 
     if (!user) {
-      // Tell frontend to redirect to complete profile route
       return res.json({
         success: true,
         needsProfile: true,
@@ -52,7 +51,7 @@ export const completeUserProfile = async (req, res) => {
     const user = await User.findOneAndUpdate(
       { address: address.toLowerCase() },
       { name, email, phone },
-      { new: true, upsert: true } // upsert = create if doesn't exist
+      { new: true, upsert: true }
     );
 
     return res.json({ success: true, message: "Profile completed", user });
