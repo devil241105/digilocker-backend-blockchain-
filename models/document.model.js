@@ -21,6 +21,11 @@ const documentSchema = new mongoose.Schema({
     type: String 
  },
 
+ fileHash: String,
+
+
+ txHash: String,
+
   uploadedAt: { 
     type: Date, 
     default: Date.now 
