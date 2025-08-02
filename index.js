@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import connectDB from './config/connectDB.js';
 import authRoutes from './routes/auth.routes.js';
 import documentRoutes from './routes/document.routes.js';
+import accessRequestRoutes from './routes/accessRequest.routes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
@@ -25,6 +26,7 @@ connectDB();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/requests', accessRequestRoutes);
 
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
