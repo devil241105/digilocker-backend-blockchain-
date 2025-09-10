@@ -6,6 +6,7 @@ import { PassThrough } from "stream";
 import mongoose from "mongoose";
 import { keccak256 } from "ethers";
 import { storeHashOnChain, verifyHashOnChain } from "../utils/blockchain.js";
+import AccessRequest from "../models/accessRequest.model.js";
 
 export const uploadDocument = async (req, res) => {
   try {
@@ -139,5 +140,72 @@ export const verifyDocument = async (req, res) => {
   } catch (err) {
     console.error("Verify document error:", err);
     return res.status(500).json({ error: "Verification failed" });
+  }
+};
+
+export const accessDocument = async (req, res) => {
+  try {
+    const address = req.user.address.toLowerCase();
+    const docId = req.params.id;
+
+    const user = await User.findOne({ address });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const document = await Document.findById(docId).populate("owner");
+
+    if (!document) return res.status(404).json({ error: "Document not found" });
+
+    const isOwner = document.owner._id.equals(user._id);
+
+    if (isOwner) {
+      return res.json({ success: true, access: "owner", document });
+    }
+
+    
+    const approvedRequest = await AccessRequest.findOne({
+      from: user._id,
+      to: document.owner._id,
+      document: document._id,
+      status: "approved"
+    });
+
+    if (!approvedRequest) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    return res.json({
+      success: true,
+      access: "approved",
+      document
+    });
+  } catch (err) {
+    console.error("Access check error:", err);
+    return res.status(500).json({ error: "Failed to verify access" });
+  }
+};
+
+export const getApprovedDocuments = async (req, res) => {
+  try {
+    const address = req.user.address.toLowerCase();
+    const user = await User.findOne({ address });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const approvedRequests = await AccessRequest.find({
+      from: user._id,
+      status: "approved"
+    })
+      .populate("document")
+      .populate("to", "name address email");
+
+    const approvedDocs = approvedRequests.map(req => ({
+      document: req.document,
+      owner: req.to
+    }));
+
+    return res.json({ success: true, count: approvedDocs.length, approvedDocs });
+  } catch (err) {
+    console.error("Get approved documents error:", err);
+    return res.status(500).json({ error: "Failed to retrieve approved documents" });
   }
 };
